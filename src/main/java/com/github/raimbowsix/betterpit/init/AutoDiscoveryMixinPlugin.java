@@ -1,4 +1,4 @@
-package com.github.raimbowsix.playernotifier.init;
+package com.github.raimbowsix.betterpit.init;
 
 import org.spongepowered.asm.lib.tree.ClassNode;
 import org.spongepowered.asm.mixin.extensibility.IMixinConfigPlugin;

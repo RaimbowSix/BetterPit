@@ -1,16 +1,16 @@
 [
   {
-    "modid": "${modid}",
-    "name": "Xample Mod",
-    "description": "A mod that is used as an example.",
-    "version": "${version}",
-    "mcversion": "${mcversion}",
-    "url": "https://github.com/romangraef/Forge1.8.9Template/",
+    "modid": "betterpit",
+    "name": "Better Pit",
+    "description": "A Minecraft Forge 1.8.9 QOL mod made for the Hypixel Pit.",
+    "version": "1.3.0",
+    "mcversion": "1.8.9",
+    "url": "https://github.com/RaimbowSix/BetterPit",
     "updateUrl": "",
     "authorList": [
-      "You"
+      "raimbowsix"
     ],
-    "credits": "",
+    "credits": "Thanks to nea89o for her modding guide https://github.com/nea89o/ and OneConfig for the template.",
     "logoFile": "",
     "screenshots": [],
     "dependencies": []

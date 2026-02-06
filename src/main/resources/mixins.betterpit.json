@@ -1,0 +1,11 @@
+{
+  "package": "com.github.raimbowsix.betterpit.mixin",
+  "plugin": "com.github.raimbowsix.betterpit.init.AutoDiscoveryMixinPlugin",
+  "refmap": "mixins.betterpit.refmap.json",
+  "minVersion": "0.7",
+  "compatibilityLevel": "JAVA_8",
+  "__comment": "You do not need to manually register mixins in this template. Check the auto discovery mixin plugin for more info.",
+  "mixins": [
+    "NetworkMixin"
+  ]
+}

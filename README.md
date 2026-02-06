@@ -1,43 +1,33 @@
-# Architectury Loom based template for 1.8.9 forge mods
 
-**For other templates, do check out the [other branches of this repository](https://github.com/romangraef/Forge1.8.9Template/branches/all)**
+# BetterPit
+BetterPit is a 1.8.9 forge Minecraft mod aimed to help pit players with informations
+on their game. It was made using OneConfig for GUI and HUD.
+## Features
+- ### Enemy Tracking :
+  On join of a lobby or when an enemy joins your lobby, the mod will send a message in chat telling that the enemy is here. When the enemy leaves the lobby you will also receive a chat message.
+  You will also see the enemies and their distance from you on the Enemies HUD.
+  Managing your enemy list : can be done either by adding usernames to watchlist.txt in your config folder. Or by using the "/watchlist" (or "/wl") command, you can chose "add" or "remove" as the first argument and then   the username you want to add or remove.
 
-## Usage
+<img width="264" height="112" alt="image" src="https://github.com/user-attachments/assets/96a71f3f-2e67-41c1-89cb-7d0724d6b58a" />
 
-Check out https://moddev.nea.moe/ for a full tutorial on legacy modding.
+- ### Dark Pants Tracking :
+  On the Dark HUD you will see the players wearing dark pants their distance from you and the enchant on those dark pants. If the pants are tier 1 or fresh it will say the enchant is fresh. It might not show all the darks on the map since this feature can only detect players rendered on your client.
 
-Alternatively, read here for a basic overview on how to use this repository.
+<img width="568" height="111" alt="image" src="https://github.com/user-attachments/assets/5e46db23-39a3-4dcf-b1cb-e2d528b60e7f" />
 
-To get started, [Use this template](https://github.com/new?template_name=Forge1.8.9Template&template_owner=nea89o).
+- ### Nicked Players Tracking :
+  As of now I did not make a denicker tho I started by adding an HUD on which you can see every nicked players in your lobby.
 
-> [!WARNING]
-> Do not Fork or Clone or Download ZIP this template. If you "use" this template a custom mod id will be generated. You can do that manually using the `make-my-own` script, if you are on linux. If not, just click the use this template button. If you want to use kotlin or make a 1.12 mod check the "Include all branches" and change the default branch in https://github.com/yourname/yourreponame/branches
+<img width="266" height="87" alt="image" src="https://github.com/user-attachments/assets/ce141998-0111-44d9-abbf-a2934cca4b10" />
 
-This project uses [DevAuth](https://github.com/DJtheRedstoner/DevAuth) per default, so you can log in using your real
-minecraft account. If you don't need that, you can remove it from the buildscript.
-
-To run the mod you will need two JDKs, one Java 17 jdk and one Java 1.8 jdk. You can download those
-from [here](https://adoptium.net/temurin/releases) (or use your own downloads).
-
-When you import your project into IntelliJ, you need to set the gradle jvm to the Java 17 JDK in the gradle tab, and the
-Project SDK to the Java 1.8 JDK. Then click on the sync button in IntelliJ, and it should create a run task
-called `Minecraft Client`. If it doesn't then try relaunching your IntelliJ. **Warning for Mac users**: You might have to remove the `-XStartOnFirstThread` vm argument from your run configuration. In the future, that should be handled by the plugin, but for now you'll probably have to do that manually.
-
-To export your project, run the `gradle build` task, and give other people the
-file `build/libs/<modid>-<version>.jar`. Ignore the jars in the `build/badjars` folder. Those are intermediary jars that
-are used by the build system but *do not work* in a normal forge installation.
-
-If you don't want mixins (which allow for modifying vanilla code), then you can remove the references to mixins from
-the `build.gradle.kts` at the lines specified with comments and the `com.example.mixin` package.
-
-If you don't want access transformers (which allow for making methods public/non-final) you can delete the
-`accesstransformer.cfg` file. If you make a change to the `accesstransformers.cfg` you might need to rebuild your
-project using `./gradlew build --refresh-dependencies`.
-
-### For those who have not an attention span
-
-[![Youtube Tutorial](https://i.ytimg.com/vi/nWzHlomdCgc/maxresdefault.jpg)](https://www.youtube.com/watch?v=nWzHlomdCgc)
-
-## Licensing
-
-This template is licensed under the Unlicense (license copy present in this repository), or alternatively under [Creative Commons 1.0 Universal (CC0 1.0)](https://creativecommons.org/publicdomain/zero/1.0/), and all contributions and PR to this template are expected to follow this. This means your mod, based on this template can be licensed whatever way you want, and does not need to reference back to this template in any way.
+## Building the Mod (In case you never built a mod in your life)
+Open a command and go in the BetterPit directory, then you build by using ./gradlew build.
+If you are using an IDE (like InteliJ or Eclipse...) make sure project sdk is java 8 and language level is 8 also make sure gradle jvm is using java 17.
+## Future Updates
+- A working denicker
+- QuickMath solver
+- Venom timer
+- Mid overlay and Exfil points overlay
+- Pants swapper
+- Lobby swapper
+  and more...
