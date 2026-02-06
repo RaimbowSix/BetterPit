@@ -19,15 +19,20 @@ All Toggleable
 - ### Denicker :
   The Denicker feature allows you to denick players in your lobby if they have attributes that make them denickable. When a player is denicked he will be added to a cache in your config so next time you see the nick the mod will quickly resolve the true name of the player, even if he doesn't have any attribute that make him denickable.
 
-  <img width="266" height="87" alt="image" src="https://github.com/user-attachments/assets/ce141998-0111-44d9-abbf-a2934cca4b10" />
+  <img width="454" height="110" alt="546429588-ba8b36be-2309-4bfd-91d7-555c0ab9e7cc" src="https://github.com/user-attachments/assets/6f845219-08e0-4739-b597-a33c6aaa5520" />
 
 - ### Bounty Tracking :
   A HUD on which you can see the bountied players along with their distance from you. You can chose the minimum amount of the bounty for it to be shown on the HUD in the OneConfig GUI. Useful for bounty hunting.
+
+  <img width="390" height="133" alt="546430325-eeabfa65-284e-48dd-9f44-912fd0405362" src="https://github.com/user-attachments/assets/732e5e2f-9c91-45dc-a9c3-603501461462" />
 
 - ### QuickMath Solver :
   This module allows you to solve the QuickMath automatically. You can chose how fast you want the Solver to be. The latency is randomized a little bit to not raise suspicions.
 - ### 2d & 3d ESP :
   Draws 2d or 3d box around player entities. Enemies will be drawn in red and nicked players in a blue box.
+
+  <img width="862" height="472" alt="546429926-8bba6f47-a190-4435-94b5-a98505265369" src="https://github.com/user-attachments/assets/ae850b22-496e-4fcf-a304-38fc93b111bc" />
+
 - ### Right Click Pant Swap :
   Right clicking on a pant held in hands will fastly swap it automatically for you.
 - ### Auto Pod :
