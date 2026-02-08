@@ -16,7 +16,7 @@ All Toggleable
 
   <img width="568" height="111" alt="image" src="https://github.com/user-attachments/assets/5e46db23-39a3-4dcf-b1cb-e2d528b60e7f" />
 
-- ### Denicker :
+- ### Hypixel Pit Denicker :
   The Denicker feature allows you to denick players in your lobby if they have attributes that make them denickable. When a player is denicked he will be added to a cache in your config so next time you see the nick the mod will quickly resolve the true name of the player, even if he doesn't have any attribute that make him denickable.
 
   <img width="454" height="110" alt="546429588-ba8b36be-2309-4bfd-91d7-555c0ab9e7cc" src="https://github.com/user-attachments/assets/6f845219-08e0-4739-b597-a33c6aaa5520" />
