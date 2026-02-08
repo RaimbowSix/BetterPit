@@ -1,7 +1,7 @@
 
 # BetterPit
-BetterPit is a 1.8.9 forge Minecraft mod aimed to help pit players with informations
-on their game. It was made using OneConfig for GUI and HUD.
+BetterPit is a 1.8.9 forge Minecraft mod aimed to help the hypixel pit players with informations
+on their game including denicking features. It was made using OneConfig for GUI and HUD.
 ## Features 
 All Toggleable
 - ### Enemy Tracking :
