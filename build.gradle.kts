@@ -96,6 +96,7 @@ repositories {
 // Configures the libraries/dependencies for your mod.
 dependencies {
     // Adds the OneConfig library, so we can develop with it.
+    implementation("org.json:json:20231013")
     modCompileOnly("cc.polyfrost:oneconfig-$platform:0.2.2-alpha+")
 
     // Adds DevAuth, which we can use to log in to Minecraft in development.

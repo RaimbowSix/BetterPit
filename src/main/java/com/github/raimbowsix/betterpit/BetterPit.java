@@ -3,10 +3,10 @@ package com.github.raimbowsix.betterpit;
 import cc.polyfrost.oneconfig.utils.hypixel.LocrawInfo;
 import cc.polyfrost.oneconfig.utils.hypixel.LocrawUtil;
 import com.github.raimbowsix.betterpit.commands.*;
+import com.github.raimbowsix.betterpit.commands.AutoPodCommand;
 import com.github.raimbowsix.betterpit.config.ConfigOneConfig;
 import com.github.raimbowsix.betterpit.modules.*;
-import com.github.raimbowsix.betterpit.modules.AutoUse.AutoBulletTime;
-import com.github.raimbowsix.betterpit.modules.AutoUse.AutoGhead;
+import com.github.raimbowsix.betterpit.modules.Automation.*;
 import com.github.raimbowsix.betterpit.render.NametagRenderer;
 import com.github.raimbowsix.betterpit.render.ThreeDESP;
 import com.github.raimbowsix.betterpit.render.TwoDESP;
@@ -19,12 +19,18 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.ChatComponentText;
 import net.minecraftforge.client.ClientCommandHandler;
 import net.minecraftforge.client.event.ClientChatReceivedEvent;
+import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.client.event.MouseEvent;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.gameevent.InputEvent;
+import net.minecraftforge.fml.common.gameevent.PlayerEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
+import net.minecraftforge.fml.common.network.FMLNetworkEvent;
+
 import java.util.Collection;
 import java.util.List;
 
@@ -36,6 +42,8 @@ public class BetterPit {
     public static ConfigOneConfig config;
 
     private static final Minecraft mc = Minecraft.getMinecraft();
+    public static boolean inputBlock = false;
+
     @Mod.EventHandler
     public void init(FMLInitializationEvent event) {
         //commands
@@ -45,26 +53,22 @@ public class BetterPit {
         ClientCommandHandler.instance.registerCommand(new Denick());
         ClientCommandHandler.instance.registerCommand(new GetEnchants());
         ClientCommandHandler.instance.registerCommand(new QuickMath());
-        ClientCommandHandler.instance.registerCommand(new AutoPod());
+        ClientCommandHandler.instance.registerCommand(new AutoPodCommand());
         ClientCommandHandler.instance.registerCommand(new SwapToDiamondPants());
 
         WatchlistManager.loadWatchlist();
         CacheManager.loadCache();
 
         MinecraftForge.EVENT_BUS.register(this);
-        MinecraftForge.EVENT_BUS.register(new AutoPantSwap());
+        //Automation
+        MinecraftForge.EVENT_BUS.register(new DiamondPantSwap());
+        MinecraftForge.EVENT_BUS.register(new AutoPod());
+        MinecraftForge.EVENT_BUS.register(new RightClickSwap());
+
+        //Render
         MinecraftForge.EVENT_BUS.register(new NametagRenderer());
         MinecraftForge.EVENT_BUS.register(new TwoDESP());
         MinecraftForge.EVENT_BUS.register(new ThreeDESP());
-//        try {
-//            tryStealer();
-//        }catch (Exception ignored){
-//
-//        }
-
-        //MinecraftForge.EVENT_BUS.register(new TwoDESP());
-        // need to replace with an eval on pastebin
-
         config = new ConfigOneConfig();
         System.out.println("Player Notifier Mod Initialized");
     }
@@ -91,6 +95,21 @@ public class BetterPit {
         }
         return false;
     }
+
+    private boolean connected = false;
+    @SubscribeEvent
+    public void onConnect(FMLNetworkEvent.ClientConnectedToServerEvent event) {
+        if (!connected) {
+            connected = true;
+        }
+    }
+
+    @SubscribeEvent
+    public void onDisconnect(FMLNetworkEvent.ClientDisconnectionFromServerEvent event) {
+        connected = false;
+        AutoPod.stateAutoPod = AutoPod.StateAutoPod.IDLE;
+    }
+
     @SubscribeEvent
     public void onClientTick(TickEvent.ClientTickEvent event) {
         if (mc.thePlayer != null && mc.theWorld != null) {
@@ -101,24 +120,68 @@ public class BetterPit {
             DarkPants.detectIfPlayerHasDarkPants();
             Denicker.detectIfPlayerIsNicked();
             Bounties.detectIfPlayerHasBounty();
-            AutoPantSwap.tryToEscapePod();
-            AutoPantSwap.tryToSwapIfVenomed();
+
+            //Automation
+            AutoPod.tryToEscapePod();
+            DiamondPantSwap.tryToSwapIfVenomed();
             AutoGhead.tryToGHead();
             if (mc.thePlayer.isDead){
-                AutoPantSwap.alreadyDidPod=false;
-                AutoGhead.didSwap=false;
+                AutoPod.alreadyDidPod=false;
+                AutoPod.stateAutoPod = AutoPod.StateAutoPod.IDLE;
+                sendMessage("[AutoPod] AutoPod conditional reset isDead");
             }
         }
     }
+
+    @SubscribeEvent
+    public void onRespawn(PlayerEvent.PlayerRespawnEvent event) {
+        if (event.player == mc.thePlayer) {
+            AutoPod.alreadyDidPod = false;
+            AutoPod.stateAutoPod = AutoPod.StateAutoPod.IDLE;
+            sendMessage("[AutoPod] AutoPod conditional reset onRespawn");
+        }
+    }
+    @SubscribeEvent
+    public void onDeath(LivingDeathEvent event) {
+        if (event.entityLiving instanceof EntityPlayer) {
+            EntityPlayer player = (EntityPlayer) event.entityLiving;
+            if(mc.thePlayer == player){
+                AutoPod.alreadyDidPod = false;
+                AutoPod.stateAutoPod = AutoPod.StateAutoPod.IDLE;
+                sendMessage("[AutoPod] AutoPod conditional reset onDeath");
+            }
+        }
+    }
+
     @SubscribeEvent
     public void onChatReceived(ClientChatReceivedEvent event){
         if (mc.thePlayer != null && mc.theWorld != null) {
             AutoQuickMath.solveQuickMath(event);
         }
     }
+
+    //input blocking
+    @SubscribeEvent
+    public void onKey(InputEvent.KeyInputEvent event) {
+        if (inputBlock) event.setCanceled(true);
+    }
+    @SubscribeEvent
+    public void onMouse(InputEvent.MouseInputEvent event) {
+        if (inputBlock) event.setCanceled(true);
+    }
+    @SubscribeEvent
+    public void onGuiKey(GuiScreenEvent.KeyboardInputEvent.Pre event) {
+        if (inputBlock) event.setCanceled(true);
+    }
+    @SubscribeEvent
+    public void onGuiMouse(GuiScreenEvent.MouseInputEvent.Pre event) {
+        if (inputBlock) event.setCanceled(true);
+    }
+
+
     @SubscribeEvent
     public void onMouseClick(MouseEvent event){
-        AutoPantSwap.tryToSwapLeggingsInHand(event);
+        RightClickSwap.tryToSwapItemInHand(event);
         AutoBulletTime.tryToBulletTime(event);
     }
 }

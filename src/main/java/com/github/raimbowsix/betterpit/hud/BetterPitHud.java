@@ -13,6 +13,6 @@ public class BetterPitHud extends TextHud {
     @Override
     protected void getLines(List<String> lines, boolean example) {
         if (ConfigOneConfig.whileInPit && !BetterPit.isInPit()) return;
-        lines.add("§7[§6BetterPit§7] §31.2.2§r "+Minecraft.getDebugFPS()+" fps");
+        lines.add("§7[§6BetterPit§7] §31.2.1§r "+Minecraft.getDebugFPS()+" fps");
     }
 }

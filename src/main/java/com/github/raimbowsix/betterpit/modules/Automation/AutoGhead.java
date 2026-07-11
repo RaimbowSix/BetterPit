@@ -1,4 +1,4 @@
-package com.github.raimbowsix.betterpit.modules.AutoUse;
+package com.github.raimbowsix.betterpit.modules.Automation;
 
 import com.github.raimbowsix.betterpit.config.ConfigOneConfig;
 import net.minecraft.client.Minecraft;
@@ -12,8 +12,6 @@ public class AutoGhead {
     public static Minecraft mc = Minecraft.getMinecraft();
     public static int oldSlot = -1;
     public static int gHeadSlot = -1;
-    public static boolean didSwap = false;
-    private static long swapTime = 0L;
     private static int tickDelay = 0;
     private static final Random random = new Random();
     private enum State {IDLE, SWAP, EAT, SWAPBACK}
@@ -76,6 +74,7 @@ public class AutoGhead {
                     tickDelay++;
                     if (tickDelay >= 3){
                         mc.thePlayer.inventory.currentItem = oldSlot;
+                        gHeadSlot = -1;
                         state = State.IDLE;
                         tickDelay =0;
                     }
@@ -83,5 +82,4 @@ public class AutoGhead {
             }
         }
     }
-    /* Auto GHead Use */
 }

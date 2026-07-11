@@ -19,7 +19,7 @@ public class Bounties {
         return match(name);
     }
     public static String extractBounty(String input) {
-        String pattern = "§6§l(\\d+)g";
+        String pattern = "§l(\\d+)g";
         Matcher m = Pattern.compile(pattern).matcher(input);
         if (m.find()) {
             return m.group(1);
@@ -39,7 +39,7 @@ public class Bounties {
     public static Set<String> lastBountiedSet = new HashSet<>();
     public static void detectIfPlayerHasBounty(){
         Set<String> currentBountiedSet = new HashSet<>();
-        Minecraft mc=Minecraft.getMinecraft();
+        Minecraft mc = Minecraft.getMinecraft();
         for (EntityPlayer player : BetterPit.playerEntities){
             if (hasBounty(player) && hasMinimumBounty(extractBounty(player.getDisplayName().getFormattedText()))){
                 currentBountiedSet.add(player.getName());

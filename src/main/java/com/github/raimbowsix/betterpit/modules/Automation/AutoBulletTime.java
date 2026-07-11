@@ -1,4 +1,4 @@
-package com.github.raimbowsix.betterpit.modules.AutoUse;
+package com.github.raimbowsix.betterpit.modules.Automation;
 
 import com.github.raimbowsix.betterpit.config.ConfigOneConfig;
 import com.github.raimbowsix.betterpit.util.GetEnchants;

@@ -1,11 +1,11 @@
 package com.github.raimbowsix.betterpit.commands;
 
-import com.github.raimbowsix.betterpit.modules.AutoPantSwap;
+import com.github.raimbowsix.betterpit.modules.Automation.AutoPod;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
 
-public class AutoPod extends CommandBase {
+public class AutoPodCommand extends CommandBase {
     @Override
     public String getCommandName() {
         return "autopod";
@@ -18,8 +18,8 @@ public class AutoPod extends CommandBase {
 
     @Override
     public void processCommand(ICommandSender sender, String[] args) throws CommandException {
-        AutoPantSwap.alreadyDidPod=false;
-        AutoPantSwap.start(2);
+        AutoPod.alreadyDidPod=false;
+        AutoPod.start();
     }
 
     @Override

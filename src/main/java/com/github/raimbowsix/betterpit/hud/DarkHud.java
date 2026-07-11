@@ -7,8 +7,10 @@ import com.github.raimbowsix.betterpit.modules.DarkPants;
 import com.github.raimbowsix.betterpit.util.GetEnchants;
 import com.github.raimbowsix.betterpit.util.PlayerLocation;
 import net.minecraft.client.Minecraft;
-import java.util.ArrayList;
+
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 
 public class DarkHud extends TextHud {
@@ -19,12 +21,12 @@ public class DarkHud extends TextHud {
         if (DarkPants.lastDarkSet.isEmpty()) {
             lines.add("No darks in lobby");
         } else {
-            ArrayList<String> Darks = new ArrayList<>();
+            Set<String> Darks = new LinkedHashSet<>();;
             if (Minecraft.getMinecraft().theWorld!=null && Minecraft.getMinecraft().theWorld.playerEntities != null)
                 Minecraft.getMinecraft().theWorld.playerEntities.stream()
                     .filter(DarkPants::hasDarks)
                     .forEach(p->{
-                        if (!GetEnchants.getDarkPantsEnchantFromName(p).equals("FRESH")) {
+                        if (!GetEnchants.getDarkPantsEnchantFromName(p).equals("FRESH")){
                             Darks.add(p.getDisplayName().getFormattedText() + " " + GetEnchants.getDarkPantsEnchantFromName(p) + PlayerLocation.getPlayerDistance(p.getName(), ConfigOneConfig.darkDistance));
                         }
                 });

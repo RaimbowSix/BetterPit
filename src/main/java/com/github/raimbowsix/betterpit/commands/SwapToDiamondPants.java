@@ -1,6 +1,6 @@
 package com.github.raimbowsix.betterpit.commands;
 
-import com.github.raimbowsix.betterpit.modules.AutoPantSwap;
+import com.github.raimbowsix.betterpit.modules.Automation.DiamondPantSwap;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
@@ -19,7 +19,7 @@ public class SwapToDiamondPants extends CommandBase {
 
     @Override
     public void processCommand(ICommandSender sender, String[] args) throws CommandException {
-        AutoPantSwap.start(3);
+        DiamondPantSwap.start();
     }
 
     @Override

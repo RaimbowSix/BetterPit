@@ -9,7 +9,7 @@ import cc.polyfrost.oneconfig.config.Config;
 import cc.polyfrost.oneconfig.config.data.Mod;
 import cc.polyfrost.oneconfig.config.data.ModType;
 import cc.polyfrost.oneconfig.config.data.OptionSize;
-import com.github.raimbowsix.betterpit.modules.AutoPantSwap;
+import com.github.raimbowsix.betterpit.modules.Automation.AutoPod;
 
 
 public class ConfigOneConfig extends Config {
@@ -20,7 +20,7 @@ public class ConfigOneConfig extends Config {
     private static final transient String DENICKER = "Denicker";
     private static final transient String BOUNTIES = "Bounties";
     private static final transient String QUICKMATH = "QuickMath";
-    private static final transient String AUTOUSE = "AutoUse";
+    private static final transient String AUTOMATION = "Automation";
     private static final transient String DEBUG = "Debug";
 
 
@@ -30,8 +30,10 @@ public class ConfigOneConfig extends Config {
     private static final transient String DENICKEROPTIONAL = "Optional";
     private static final transient String BOUNTIESOPTIONAL = "Optional";
     private static final transient String AUTOBULLETTIME = "AutoBulletTime";
-    private static final transient String AUTOPANTSWAP = "AutoPantSwap";
-    private static final transient String AUTOUSEITEMS = "AutoGhead";
+    private static final transient String AUTOPOD = "AutoPod";
+    private static final transient String RIGHTCLICKPANTSWAP = "RightClickSwap";
+    private static final transient String VENOMCOUNTER = "VenomCounter";
+    private static final transient String AUTOGHEAD = "AutoGhead";
 
     //BetterPit
     @HUD(
@@ -69,65 +71,69 @@ public class ConfigOneConfig extends Config {
     //AutoSwapIfVenomed
     @Switch(
             name = "Swap To Diamond Pants When Venomed",
-            size = OptionSize.SINGLE,
-            category = AUTOUSE,
-            subcategory = AUTOPANTSWAP
+            category = AUTOMATION,
+            subcategory = VENOMCOUNTER
     )
     public static boolean autoSwapIfVenomed = false;
     @Switch(
             name = "Swap Back",
-            category = AUTOUSE,
-            subcategory = AUTOPANTSWAP
+            category = AUTOMATION,
+            subcategory = VENOMCOUNTER
     )
     public static boolean swapBack = false;
-    //AutoPantSwap
+    //AutoPod
     @Switch(
             name = "Toggle Auto Pod",
-            size = OptionSize.SINGLE,
-            category = AUTOUSE,
-            subcategory = AUTOPANTSWAP
+            category = AUTOMATION,
+            subcategory = AUTOPOD
     )
     public static boolean autoPod = false;
+    @Switch(
+            name = "Show Inventory",
+            category = AUTOMATION,
+            subcategory = AUTOPOD
+    )
+    public static boolean autoPodShowInv = true;
     @Button(
             name = "",
-            text = "rearm",
+            text = "Rearm",
             description = "Escape pod is normally usable once per life but if you need to rearm it press the button",
-            category = AUTOUSE,
-            subcategory = AUTOPANTSWAP
+            category = AUTOMATION,
+            subcategory = AUTOPOD
     )
     public void rearmAutoPod(){
-        AutoPantSwap.alreadyDidPod=false;
+        AutoPod.alreadyDidPod=false;
         BetterPit.sendMessage("§7[§6BetterPit§7] §rAutoPod has been re-armed.");
     }
 
     @Slider(
             name = "Swap When Health = ",
-            category = AUTOUSE,
-            subcategory = AUTOPANTSWAP,
+            category = AUTOMATION,
+            subcategory = AUTOPOD,
             min = 0F,
             max = 20F
     )
     public static float defaultHealthValuePod = 5F;
 
     @Switch(
-            name = "Toggle right click pant swap",
+            name = "Toggle right click armor swapping",
             size = OptionSize.SINGLE,
-            category = AUTOUSE,
-            subcategory = AUTOPANTSWAP
+            category = AUTOMATION,
+            subcategory = RIGHTCLICKPANTSWAP
     )
     public static boolean rightClickPantSwap = false;
     //AutoEatGoldenHeads
     @Switch(
             name = "Toggle AutoGhead",
             size = OptionSize.SINGLE,
-            category = AUTOUSE,
-            subcategory = AUTOUSEITEMS
+            category = AUTOMATION,
+            subcategory = AUTOGHEAD
     )
     public static boolean autoGhead = false;
     @Slider(
             name = "Swap When Health = ",
-            category = AUTOUSE,
-            subcategory = AUTOUSEITEMS,
+            category = AUTOMATION,
+            subcategory = AUTOGHEAD,
             min = 0F,
             max = 20F
     )
@@ -136,7 +142,7 @@ public class ConfigOneConfig extends Config {
     @Switch(
             name = "Toggle AutoBulletTime",
             size = OptionSize.SINGLE,
-            category = AUTOUSE,
+            category = AUTOMATION,
             subcategory = AUTOBULLETTIME
     )
     public static boolean autoBulletTime = false;
@@ -177,7 +183,6 @@ public class ConfigOneConfig extends Config {
     public static boolean darkPosition = true;
 
     //Nicked Players
-
     @HUD(
             name = "Nicked Players HUD",
             category = DENICKER

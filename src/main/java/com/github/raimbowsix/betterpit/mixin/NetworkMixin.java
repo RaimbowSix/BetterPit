@@ -2,7 +2,7 @@ package com.github.raimbowsix.betterpit.mixin;
 
 import com.github.raimbowsix.betterpit.BetterPit;
 import com.github.raimbowsix.betterpit.config.ConfigOneConfig;
-import com.github.raimbowsix.betterpit.modules.AutoPantSwap;
+import com.github.raimbowsix.betterpit.modules.Automation.AutoPod;
 import io.netty.channel.ChannelHandlerContext;
 import net.minecraft.network.INetHandler;
 import net.minecraft.network.NetworkManager;
@@ -30,7 +30,7 @@ public class NetworkMixin {
         if (packet instanceof C01PacketChatMessage){
             String message = ((C01PacketChatMessage) packet).getMessage();
             if (message.startsWith("/spawn")){
-                AutoPantSwap.alreadyDidPod=false;
+                AutoPod.alreadyDidPod=false;
             }
         }
     }

@@ -1,20 +1,21 @@
-package com.github.raimbowsix.betterpit.modules;
+package com.github.raimbowsix.betterpit.modules.Automation;
 
 import com.github.raimbowsix.betterpit.config.ConfigOneConfig;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiChat;
 import net.minecraft.util.ChatComponentText;
 import net.minecraftforge.client.event.ClientChatReceivedEvent;
 
 public class AutoQuickMath {
     public static void solveQuickMath(ClientChatReceivedEvent event){
         String rawMessage = event.message.getUnformattedText();
-        if(ConfigOneConfig.quickMath && rawMessage.startsWith("QUICK MATHS! Solve: ") && Minecraft.getMinecraft().currentScreen==null){
+        if(ConfigOneConfig.quickMath && rawMessage.startsWith("QUICK MATHS! Solve: ") && (Minecraft.getMinecraft().currentScreen==null||Minecraft.getMinecraft().currentScreen instanceof GuiChat)){
             long millisStarted = System.currentTimeMillis();
             try{
                 String mathProblem = rawMessage.replace("QUICK MATHS! Solve: ", "");
                 new Thread(()->{
                     try {
-                        int randomInt = (int) (Math.random() * 1000);
+                        int randomInt = (int) (Math.random() * 50);
                         Thread.sleep(ConfigOneConfig.getQuickMathMinDelay+randomInt);
                     } catch (InterruptedException e) {
                         throw new RuntimeException(e);
