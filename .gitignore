@@ -4,3 +4,18 @@ run/
 build/
 .gradle/
 
+# IDE (Eclipse/Buildship) project files
+.project
+.settings/
+.classpath
+.factorypath
+
+# Version build/IDE artifacts
+versions/*/.gradle/
+versions/*/build/
+versions/*/bin/
+versions/*/.classpath
+versions/*/.factorypath
+versions/*/.project
+versions/*/.settings/
+

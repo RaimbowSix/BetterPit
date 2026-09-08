@@ -1,94 +1,100 @@
 package com.github.raimbowsix.betterpit.modules.Automation;
 
 import com.github.raimbowsix.betterpit.config.ConfigOneConfig;
+import com.github.raimbowsix.betterpit.util.InventoryUtil;
+import com.github.raimbowsix.betterpit.util.Lobby;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.inventory.GuiInventory;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemArmor;
 import net.minecraft.item.ItemStack;
-import net.minecraft.network.play.client.C0DPacketCloseWindow;
-import net.minecraft.network.play.client.C16PacketClientStatus;
 import net.minecraftforge.client.event.MouseEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 
 public class RightClickSwap {
-    //basic static
-    static Minecraft mc = Minecraft.getMinecraft();
+    private enum State {
+        IDLE,
+        OPEN_INVENTORY,
+        EQUIP_ARMOR,
+        CLOSE_INVENTORY
+    }
 
-    //enum RightClickSwap
-    private enum StateRightClickSwap { IDLE, OPEN_INV, SWAP, CLOSE_INV };
-    private static RightClickSwap.StateRightClickSwap stateRightClickSwap = RightClickSwap.StateRightClickSwap.IDLE;
-
-    //tickDelay
+    private static State state = State.IDLE;
     private static int tickDelay = 0;
 
-    public static void tryToSwapItemInHand(MouseEvent event) {
-        if (!ConfigOneConfig.rightClickPantSwap || mc.currentScreen != null || event.button != 1 || !event.buttonstate) return;
+    @SubscribeEvent
+    public void onMouseClick(MouseEvent event) {
+        if (!ConfigOneConfig.rightClickPantSwap || event.button != 1 || !event.buttonstate) return;
+        Minecraft mc = Minecraft.getMinecraft();
+        if (mc.thePlayer == null || mc.currentScreen != null) return;
         EntityPlayer player = mc.thePlayer;
-        if (player == null || player.inventory.armorItemInSlot(1) == null) return;
+        if (player.inventory.armorItemInSlot(1) == null) return;
         ItemStack heldItem = player.inventory.getStackInSlot(player.inventory.currentItem);
         if (heldItem == null || !(heldItem.getItem() instanceof ItemArmor)) return;
-        ItemArmor armor = (ItemArmor) heldItem.getItem();
-        RightClickSwap.start();
+        start();
     }
+
     public static void start() {
-        if (stateRightClickSwap != StateRightClickSwap.IDLE) return;
+        if (state != State.IDLE) return;
+        transition(State.OPEN_INVENTORY);
+    }
+
+    private static void transition(State next) {
+        state = next;
         tickDelay = 0;
-        stateRightClickSwap = StateRightClickSwap.OPEN_INV;
     }
 
     @SubscribeEvent
     public void onClientTick(TickEvent.ClientTickEvent event) {
-        if (event.phase != TickEvent.Phase.START || mc.thePlayer == null) return;
-        if (stateRightClickSwap == RightClickSwap.StateRightClickSwap.IDLE) return;
+        if (event.phase != TickEvent.Phase.START || !Lobby.isReady()) return;
+        if (state == State.IDLE) return;
+        Minecraft mc = Minecraft.getMinecraft();
         tickDelay++;
-        switch (stateRightClickSwap) {
-        case OPEN_INV:
-            if (tickDelay >= 0) {
-                mc.thePlayer.sendQueue.addToSendQueue(new C16PacketClientStatus(C16PacketClientStatus.EnumState.OPEN_INVENTORY_ACHIEVEMENT));
-                mc.displayGuiScreen(new GuiInventory(mc.thePlayer));
-                stateRightClickSwap = RightClickSwap.StateRightClickSwap.SWAP;
-                tickDelay = 0;
-            }
-            break;
-        case SWAP:
-            if (tickDelay >= 1) {
-                if (mc.thePlayer.openContainer==null){
-                    stateRightClickSwap = RightClickSwap.StateRightClickSwap.IDLE;
-                    break;
+        switch (state) {
+            case OPEN_INVENTORY:
+                if (tickDelay >= 0) {
+                    InventoryUtil.openPlayerInventory();
+                    transition(State.EQUIP_ARMOR);
                 }
-                if (mc.currentScreen instanceof GuiInventory) {
-                    int armorSlot;
-                    ItemArmor armor = (ItemArmor) mc.thePlayer.inventory.getStackInSlot(mc.thePlayer.inventory.currentItem).getItem();
-                    switch (armor.armorType){
-                        case 0:
-                            armorSlot = 5;
-                            break;
-                        case 1:
-                            armorSlot = 6;
-                            break;
-                        case 3:
-                            armorSlot = 8;
-                            break;
-                        default:
-                            armorSlot = 7;
+                break;
+
+            case EQUIP_ARMOR:
+                if (tickDelay >= 1) {
+                    if (mc.thePlayer.openContainer == null) {
+                        transition(State.IDLE);
+                        break;
                     }
-                    int heldItemSlot = mc.thePlayer.inventory.currentItem;
-                    mc.playerController.windowClick(0, armorSlot, heldItemSlot,2, mc.thePlayer);
-                    tickDelay = 0;
-                    stateRightClickSwap = RightClickSwap.StateRightClickSwap.CLOSE_INV;
+                    if (!InventoryUtil.isPlayerInventoryOpen()) break;
+                    ItemStack heldItem = mc.thePlayer.inventory.getStackInSlot(mc.thePlayer.inventory.currentItem);
+                    if (heldItem == null || !(heldItem.getItem() instanceof ItemArmor)) {
+                        transition(State.CLOSE_INVENTORY);
+                        break;
+                    }
+                    ItemArmor armor = (ItemArmor) heldItem.getItem();
+                    InventoryUtil.click(armorSlot(armor.armorType), mc.thePlayer.inventory.currentItem, 2);
+                    transition(State.CLOSE_INVENTORY);
                 }
-            }
-            break;
-        case CLOSE_INV:
-            if (tickDelay >= 1) {
-                mc.thePlayer.sendQueue.addToSendQueue(new C0DPacketCloseWindow(0));
-                mc.displayGuiScreen(null);
-                tickDelay = 0;
-                stateRightClickSwap = RightClickSwap.StateRightClickSwap.IDLE;
-            }
-            break;
+                break;
+
+            case CLOSE_INVENTORY:
+                if (tickDelay >= 1) {
+                    InventoryUtil.closePlayerInventory();
+                    transition(State.IDLE);
+                }
+                break;
+        }
+    }
+
+    private static int armorSlot(int armorType) {
+        switch (armorType) {
+            case 0:
+                return 5;
+            case 1:
+                return 6;
+            case 3:
+                return 8;
+            default:
+                return 7;
         }
     }
 }

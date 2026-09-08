@@ -7,49 +7,53 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemSword;
 import net.minecraftforge.client.event.MouseEvent;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+
 import java.util.Random;
 
 public class AutoBulletTime {
-    private static final Minecraft mc = Minecraft.getMinecraft();
+    private static final String BULLET_TIME_ENCHANT = "blocking_cancels_projectiles";
+    private static final Random random = new Random();
+
     private static int oldSlot = -1;
     private static boolean didSwap = false;
     private static long swapTime = 0L;
     private static int randomizedDelay = 0;
 
-    private static final Random random = new Random();
-
-    public static void tryToBulletTime(MouseEvent event) {
-        if (!ConfigOneConfig.autoBulletTime || mc.currentScreen != null || mc.thePlayer == null) return;
-
-        EntityPlayer player = mc.thePlayer;
-        if (event.button == 1 && event.buttonstate) {
-            ItemStack heldItem = player.getHeldItem();
-            if (heldItem != null && heldItem.getItem() instanceof ItemSword && GetEnchants.hasEnchant(heldItem,"blocking_cancels_projectiles")) {
-                for (int i = 0; i <= 8; i++) {
-                    ItemStack item = player.inventory.getStackInSlot(i);
-                    if (item != null && GetEnchants.hasEnchant(item,"blocking_cancels_projectiles")) {
-                        oldSlot = player.inventory.currentItem;
-                        player.inventory.currentItem = i;
-                        mc.playerController.updateController();
-                        heldItem = player.getHeldItem();
-                        mc.playerController.sendUseItem(mc.thePlayer, mc.theWorld, heldItem);
-                        didSwap = true;
-                        swapTime = System.currentTimeMillis();
-                        randomizedDelay = 100 + random.nextInt(151);
-                        break;
-                    }
-                }
-            }
+    @SubscribeEvent
+    public void onMouseClick(MouseEvent event) {
+        Minecraft mc = Minecraft.getMinecraft();
+        if (!ConfigOneConfig.autoBulletTime || mc.thePlayer == null || mc.currentScreen != null) return;
+        if (event.button != 1) return;
+        if (event.buttonstate) {
+            swapToBulletTime(mc, mc.thePlayer);
+            return;
         }
-        if (event.button == 1 && !event.buttonstate && didSwap && oldSlot != -1) {
-            long elapsed = System.currentTimeMillis() - swapTime;
-            if (elapsed >= randomizedDelay) {
-                player.inventory.currentItem = oldSlot;
+        if (didSwap && oldSlot != -1 && System.currentTimeMillis() - swapTime >= randomizedDelay) {
+            mc.thePlayer.inventory.currentItem = oldSlot;
+            mc.playerController.updateController();
+            mc.thePlayer.swingItem();
+            didSwap = false;
+            oldSlot = -1;
+            randomizedDelay = 0;
+        }
+    }
+
+    private static void swapToBulletTime(Minecraft mc, EntityPlayer player) {
+        ItemStack heldItem = player.getHeldItem();
+        if (heldItem == null || !(heldItem.getItem() instanceof ItemSword)
+                || !GetEnchants.hasEnchant(heldItem, BULLET_TIME_ENCHANT)) return;
+        for (int i = 0; i <= 8; i++) {
+            ItemStack item = player.inventory.getStackInSlot(i);
+            if (item != null && GetEnchants.hasEnchant(item, BULLET_TIME_ENCHANT)) {
+                oldSlot = player.inventory.currentItem;
+                player.inventory.currentItem = i;
                 mc.playerController.updateController();
-                player.swingItem();
-                didSwap = false;
-                oldSlot = -1;
-                randomizedDelay = 0;
+                mc.playerController.sendUseItem(mc.thePlayer, mc.theWorld, player.getHeldItem());
+                didSwap = true;
+                swapTime = System.currentTimeMillis();
+                randomizedDelay = 100 + random.nextInt(151);
+                break;
             }
         }
     }

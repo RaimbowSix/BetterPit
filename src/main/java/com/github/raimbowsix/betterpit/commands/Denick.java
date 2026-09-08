@@ -2,7 +2,6 @@ package com.github.raimbowsix.betterpit.commands;
 
 import com.github.raimbowsix.betterpit.BetterPit;
 import com.github.raimbowsix.betterpit.modules.Denicker;
-import net.minecraft.client.Minecraft;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
@@ -17,7 +16,7 @@ public class Denick extends CommandBase {
 
     @Override
     public String getCommandUsage(ICommandSender sender) {
-        return "/getdisplayname player";
+        return "/denick <player>";
     }
 
     @Override
@@ -43,5 +42,4 @@ public class Denick extends CommandBase {
     public boolean canCommandSenderUseCommand(ICommandSender sender) {
         return true;
     }
-    public Minecraft mc = Minecraft.getMinecraft();
 }
