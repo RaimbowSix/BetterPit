@@ -18,7 +18,7 @@ public class AutoPodCommand extends CommandBase {
 
     @Override
     public void processCommand(ICommandSender sender, String[] args) throws CommandException {
-        AutoPod.alreadyDidPod=false;
+        AutoPod.rearm();
         AutoPod.start();
     }
 

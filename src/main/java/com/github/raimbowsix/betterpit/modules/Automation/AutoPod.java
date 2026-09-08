@@ -3,225 +3,239 @@ package com.github.raimbowsix.betterpit.modules.Automation;
 import com.github.raimbowsix.betterpit.BetterPit;
 import com.github.raimbowsix.betterpit.config.ConfigOneConfig;
 import com.github.raimbowsix.betterpit.util.GetEnchants;
+import com.github.raimbowsix.betterpit.util.InventoryUtil;
+import com.github.raimbowsix.betterpit.util.InputBlocker;
+import com.github.raimbowsix.betterpit.util.Lobby;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.inventory.GuiInventory;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.ItemStack;
-import net.minecraft.network.play.client.C0DPacketCloseWindow;
-import net.minecraft.network.play.client.C16PacketClientStatus;
 import net.minecraft.potion.Potion;
+import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.gameevent.PlayerEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
-
-import static com.github.raimbowsix.betterpit.BetterPit.isInPit;
+import net.minecraftforge.fml.common.network.FMLNetworkEvent;
 
 public class AutoPod {
+    private static final String POD_ENCHANT = "escape_pod";
+    // 7 is the pants slot id in the inventory GUI
+    private static final int LEG_SLOT = 7;
 
-    public enum StateAutoPod { IDLE, OPEN_INV1, SWAP1, SWAP2, CLOSE_INV1, OPEN_INV2, SWAP3, SWAP4, CLOSE_INV2 }
-    public static boolean alreadyDidPod = false;
-    public static AutoPod.StateAutoPod stateAutoPod = AutoPod.StateAutoPod.IDLE;
+    private enum State {
+        IDLE,
+        OPEN_INVENTORY,
+        EQUIP_POD_FIRST_CLICK,
+        EQUIP_POD_SECOND_CLICK,
+        CLOSE_INVENTORY,
+        WAIT_FOR_REGEN,
+        UNEQUIP_FIRST_CLICK,
+        UNEQUIP_SECOND_CLICK,
+        CLOSE_FINAL
+    }
+
+    private static State state = State.IDLE;
+    private static boolean alreadyDidPod = false;
     private static int tickDelay = 0;
-
     private static int oldInvSlot = -1;
     private static int podSlot = -1;
 
-    static Minecraft mc = Minecraft.getMinecraft();
-    static int leggingSlot = 7;
-
-    public static void resetAutoPod() {
-        AutoPod.stateAutoPod = StateAutoPod.IDLE;
-        BetterPit.inputBlock = false;
+    public static void rearm() {
+        alreadyDidPod = false;
     }
 
-    public static boolean hasPodInInv(){
-        for (int i = 0; i <= 35; i++) {
-            ItemStack item = mc.thePlayer.inventory.getStackInSlot(i);
-            if (item != null && GetEnchants.hasEnchant(item,"escape_pod")) {
+    public static void start() {
+        if (state != State.IDLE) return;
+        transition(State.OPEN_INVENTORY);
+    }
+
+    private static void transition(State next) {
+        state = next;
+        tickDelay = 0;
+    }
+
+    private static void reset() {
+        state = State.IDLE;
+        tickDelay = 0;
+        oldInvSlot = -1;
+        podSlot = -1;
+        InputBlocker.blocked = false;
+    }
+
+    private static void abort(boolean podUsed) {
+        reset();
+        if (!podUsed) alreadyDidPod = false;
+    }
+
+    private static boolean hasPodRegenEffect(EntityPlayer player) {
+        for (int i = 1; i <= 3; i++) {
+            if (player != null && player.getActivePotionEffect(Potion.regeneration) != null
+                    && player.getActivePotionEffect(Potion.regeneration).getAmplifier() == i
+                    && player.getActivePotionEffect(Potion.regeneration).getDuration() > 19) {
                 return true;
             }
         }
         return false;
     }
 
-    public static boolean hasPodRegenEffect(EntityPlayer player){
-        for (int i = 1; i<=3; i++) {
-            if (mc.thePlayer!=null && player.getActivePotionEffect(Potion.regeneration) != null) {
-                if (player.getActivePotionEffect(Potion.regeneration).getAmplifier() == i && player.getActivePotionEffect(Potion.regeneration).getDuration()>19) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
-    public static void tryToEscapePod(){
+    private static void tryToStart() {
+        Minecraft mc = Minecraft.getMinecraft();
         if (!ConfigOneConfig.autoPod || mc.currentScreen != null) return;
-        if (ConfigOneConfig.whileInPit && !isInPit()) return;
+        if (ConfigOneConfig.whileInPit && !BetterPit.isInPit()) return;
         EntityPlayer player = mc.thePlayer;
-        if (player == null || player.inventory.armorItemInSlot(1)==null || GetEnchants.hasEnchant(player.inventory.armorItemInSlot(1), "escape_pod")) return;
-        if (mc.thePlayer.getHealth()<ConfigOneConfig.defaultHealthValuePod && !alreadyDidPod && mc.currentScreen==null && hasPodInInv() && player.getActivePotionEffect(Potion.poison)==null){
+        if (player == null || player.inventory.armorItemInSlot(1) == null
+                || GetEnchants.hasEnchant(player.inventory.armorItemInSlot(1), POD_ENCHANT)) return;
+        boolean podAvailable = player.getHealth() < ConfigOneConfig.defaultHealthValuePod
+                && !alreadyDidPod
+                && InventoryUtil.hasEnchantInInventory(POD_ENCHANT)
+                && player.getActivePotionEffect(Potion.poison) == null;
+        if (podAvailable) {
             alreadyDidPod = true;
-            AutoPod.start();
+            start();
         }
     }
 
-    public static void start() {
-        if (stateAutoPod != AutoPod.StateAutoPod.IDLE) return;
-        tickDelay = 0;
-        stateAutoPod = AutoPod.StateAutoPod.OPEN_INV1;
-    }
     @SubscribeEvent
     public void onClientTick(TickEvent.ClientTickEvent event) {
-        if (stateAutoPod != StateAutoPod.IDLE) {
-            tickDelay++;
-            switch (stateAutoPod) {
-
-                case OPEN_INV1:
-                    if (tickDelay >= 0) {
-                        if (mc.currentScreen != null){
-                            if(mc.currentScreen instanceof GuiInventory){
-                                stateAutoPod = StateAutoPod.SWAP1;
-                                tickDelay = 0;
-                                break;
-                            }
-                            resetAutoPod();
-                            alreadyDidPod = false;
-                            break;
-                        }
-                        BetterPit.inputBlock = true;
-                        mc.thePlayer.sendQueue.addToSendQueue(new C16PacketClientStatus(C16PacketClientStatus.EnumState.OPEN_INVENTORY_ACHIEVEMENT));
-                        mc.displayGuiScreen(new GuiInventory(mc.thePlayer));
-                        stateAutoPod = StateAutoPod.SWAP1;
-                        tickDelay = 0;
-                    }
-                    break;
-
-                case SWAP1:
-                    if (tickDelay >= 2) {
-                        if (!(mc.currentScreen instanceof GuiInventory)) {
-                            resetAutoPod();
-                            alreadyDidPod = false;
-                            break;
-                        }
-                        oldInvSlot = -1;
-                        podSlot = -1;
-                        for (int i = 0; i <= 35; i++) {
-                            ItemStack item = mc.thePlayer.inventory.getStackInSlot(i);
-                            if (item != null && GetEnchants.hasEnchant(item, "escape_pod")) {
-                                podSlot = i;
-                                oldInvSlot = podSlot;
-                                break;
-                            }
-                        }
-                        if (podSlot == -1) {
-                            tickDelay = 0;
-                            stateAutoPod = StateAutoPod.CLOSE_INV2;
-                            break;
-                        }
-                        if (podSlot <= 8) {
-                            mc.playerController.windowClick(0, leggingSlot, podSlot, 2, mc.thePlayer);
-                            tickDelay = 0;
-                            stateAutoPod = StateAutoPod.CLOSE_INV1;
-                            break;
-                        }
-                        mc.playerController.windowClick(0, podSlot, 4, 2, mc.thePlayer);
-                        tickDelay = 0;
-                        stateAutoPod = StateAutoPod.SWAP2;
-
-                    }
-                    break;
-
-                case SWAP2:
-                    if (tickDelay >= 2) {
-                        if (!(mc.currentScreen instanceof GuiInventory)) {
-                            resetAutoPod();
-                            alreadyDidPod = false;
-                            break;
-                        }
-                        mc.playerController.windowClick(0, leggingSlot, 4, 2, mc.thePlayer); //7 is the pants slot id
-                        tickDelay = 0;
-                        stateAutoPod = StateAutoPod.CLOSE_INV1;
-                    }
-                    break;
-
-                case CLOSE_INV1:
-                    if (tickDelay >= 1) {
-                        if (mc.currentScreen == null){
-                            stateAutoPod = StateAutoPod.OPEN_INV2;
-                            tickDelay = 0;
-                            break;
-                        }
-                        mc.thePlayer.sendQueue.addToSendQueue(new C0DPacketCloseWindow(0));
-                        mc.displayGuiScreen(null);
-                        tickDelay = 0;
-                        stateAutoPod = StateAutoPod.OPEN_INV2;
-                    }
-                    break;
-
-                case OPEN_INV2:
-                    if(tickDelay >= 1) {
-                        BetterPit.inputBlock = false;
-                        if (hasPodRegenEffect(mc.thePlayer)) {
-                            if ((mc.currentScreen != null)||(mc.thePlayer.inventory.armorItemInSlot(1) == null)) {
-                                if (mc.currentScreen instanceof GuiInventory && (mc.thePlayer.inventory.armorItemInSlot(1) != null)) {
-                                    stateAutoPod = StateAutoPod.SWAP3;
-                                    tickDelay = 0;
-                                    break;
-                                }
-                                resetAutoPod();
-                                alreadyDidPod = true;
-                                break;
-                            }
-                            BetterPit.inputBlock = true;
-                            mc.thePlayer.sendQueue.addToSendQueue(new C16PacketClientStatus(C16PacketClientStatus.EnumState.OPEN_INVENTORY_ACHIEVEMENT));
-                            mc.displayGuiScreen(new GuiInventory(mc.thePlayer));
-                            stateAutoPod = StateAutoPod.SWAP3;
-                            tickDelay = 0;
+        if (event.phase != TickEvent.Phase.START || !Lobby.isReady()) return;
+        tryToStart();
+        if (state == State.IDLE) return;
+        Minecraft mc = Minecraft.getMinecraft();
+        tickDelay++;
+        switch (state) {
+            case OPEN_INVENTORY:
+                if (tickDelay >= 0) {
+                    if (mc.currentScreen != null) {
+                        if (mc.currentScreen instanceof GuiInventory) {
+                            transition(State.EQUIP_POD_FIRST_CLICK);
+                        } else {
+                            abort(false);
                         }
                         break;
                     }
+                    InputBlocker.blocked = true;
+                    InventoryUtil.openPlayerInventory();
+                    transition(State.EQUIP_POD_FIRST_CLICK);
+                }
+                break;
 
-                case SWAP3:
-                    if (tickDelay >= 2) {
-                        if (!(mc.currentScreen instanceof GuiInventory)) {
-                            resetAutoPod();
-                            alreadyDidPod = true;
-                            break;
-                        }
-                        if (oldInvSlot <= 8) {
-                            mc.playerController.windowClick(0, leggingSlot, oldInvSlot, 2, mc.thePlayer);
-                            tickDelay = 0;
-                            stateAutoPod = StateAutoPod.CLOSE_INV2;
-                            break;
-                        }
-                        mc.playerController.windowClick(0, leggingSlot, 4, 2, mc.thePlayer);
-                        tickDelay = 0;
-                        stateAutoPod = StateAutoPod.SWAP4;
+            case EQUIP_POD_FIRST_CLICK:
+                if (tickDelay >= 2) {
+                    if (!InventoryUtil.isPlayerInventoryOpen()) {
+                        abort(false);
+                        break;
                     }
-                    break;
+                    podSlot = InventoryUtil.slotWithEnchant(POD_ENCHANT);
+                    oldInvSlot = podSlot;
+                    if (podSlot == -1) {
+                        transition(State.CLOSE_FINAL);
+                        break;
+                    }
+                    if (podSlot <= 8) {
+                        InventoryUtil.click(LEG_SLOT, podSlot, 2);
+                        transition(State.CLOSE_INVENTORY);
+                        break;
+                    }
+                    InventoryUtil.click(podSlot, 4, 2);
+                    transition(State.EQUIP_POD_SECOND_CLICK);
+                }
+                break;
 
-                case SWAP4:
-                    if (tickDelay >= 2) {
-                        if (!(mc.currentScreen instanceof GuiInventory)) {
-                            resetAutoPod();
-                            alreadyDidPod = true;
-                            break;
-                        }
-                        mc.playerController.windowClick(0, oldInvSlot, 4, 2, mc.thePlayer);
-                        tickDelay = 0;
-                        stateAutoPod = StateAutoPod.CLOSE_INV2;
+            case EQUIP_POD_SECOND_CLICK:
+                if (tickDelay >= 2) {
+                    if (!InventoryUtil.isPlayerInventoryOpen()) {
+                        abort(false);
+                        break;
                     }
-                    break;
+                    InventoryUtil.click(LEG_SLOT, 4, 2);
+                    transition(State.CLOSE_INVENTORY);
+                }
+                break;
 
-                case CLOSE_INV2:
-                    if (tickDelay >= 1) {
-                        mc.thePlayer.sendQueue.addToSendQueue(new C0DPacketCloseWindow(0));
-                        mc.displayGuiScreen(null);
-                        BetterPit.inputBlock = false;
-                        resetAutoPod();
+            case CLOSE_INVENTORY:
+                if (tickDelay >= 1) {
+                    if (mc.currentScreen != null) {
+                        InventoryUtil.closePlayerInventory();
                     }
-                    break;
-            }
+                    transition(State.WAIT_FOR_REGEN);
+                }
+                break;
+
+            case WAIT_FOR_REGEN:
+                if (tickDelay >= 1) {
+                    InputBlocker.blocked = false;
+                    if (!hasPodRegenEffect(mc.thePlayer)) break;
+                    if (mc.currentScreen != null || mc.thePlayer.inventory.armorItemInSlot(1) == null) {
+                        if (mc.currentScreen instanceof GuiInventory && mc.thePlayer.inventory.armorItemInSlot(1) != null) {
+                            transition(State.UNEQUIP_FIRST_CLICK);
+                        } else {
+                            abort(true);
+                        }
+                        break;
+                    }
+                    InputBlocker.blocked = true;
+                    InventoryUtil.openPlayerInventory();
+                    transition(State.UNEQUIP_FIRST_CLICK);
+                }
+                break;
+
+            case UNEQUIP_FIRST_CLICK:
+                if (tickDelay >= 2) {
+                    if (!InventoryUtil.isPlayerInventoryOpen()) {
+                        abort(true);
+                        break;
+                    }
+                    if (oldInvSlot <= 8) {
+                        InventoryUtil.click(LEG_SLOT, oldInvSlot, 2);
+                        transition(State.CLOSE_FINAL);
+                        break;
+                    }
+                    InventoryUtil.click(LEG_SLOT, 4, 2);
+                    transition(State.UNEQUIP_SECOND_CLICK);
+                }
+                break;
+
+            case UNEQUIP_SECOND_CLICK:
+                if (tickDelay >= 2) {
+                    if (!InventoryUtil.isPlayerInventoryOpen()) {
+                        abort(true);
+                        break;
+                    }
+                    InventoryUtil.click(oldInvSlot, 4, 2);
+                    transition(State.CLOSE_FINAL);
+                }
+                break;
+
+            case CLOSE_FINAL:
+                if (tickDelay >= 1) {
+                    InventoryUtil.closePlayerInventory();
+                    reset();
+                }
+                break;
+        }
+    }
+
+    @SubscribeEvent
+    public void onDisconnect(FMLNetworkEvent.ClientDisconnectionFromServerEvent event) {
+        reset();
+    }
+
+    @SubscribeEvent
+    public void onRespawn(PlayerEvent.PlayerRespawnEvent event) {
+        Minecraft mc = Minecraft.getMinecraft();
+        if (event.player == mc.thePlayer) {
+            rearm();
+            reset();
+            BetterPit.sendMessage("[AutoPod] AutoPod conditional reset onRespawn");
+        }
+    }
+
+    @SubscribeEvent
+    public void onDeath(LivingDeathEvent event) {
+        Minecraft mc = Minecraft.getMinecraft();
+        if (event.entityLiving instanceof EntityPlayer && mc.thePlayer == event.entityLiving) {
+            rearm();
+            reset();
+            BetterPit.sendMessage("[AutoPod] AutoPod conditional reset onDeath");
         }
     }
 }

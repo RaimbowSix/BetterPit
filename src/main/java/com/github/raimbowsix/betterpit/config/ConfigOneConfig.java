@@ -102,7 +102,7 @@ public class ConfigOneConfig extends Config {
             subcategory = AUTOPOD
     )
     public void rearmAutoPod(){
-        AutoPod.alreadyDidPod=false;
+        AutoPod.rearm();
         BetterPit.sendMessage("§7[§6BetterPit§7] §rAutoPod has been re-armed.");
     }
 
